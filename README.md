@@ -17,8 +17,8 @@ To build and run the server, follow these steps:
 4. Run the `run.sh` script to build the project.
 
 ```sh
-git clone <repository_url>
-cd <repository_directory>
+git clone git@github.com:afif1400/redmirror.git
+cd redmirror
 chmod +x build.sh
 ./run.sh
 ```
