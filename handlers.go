@@ -1,6 +1,11 @@
 package main
 
-import "sync"
+import (
+	"fmt"
+	"strconv"
+	"sync"
+	"time"
+)
 
 var SETs = map[string]string{}
 var SETsMu = sync.RWMutex{}
@@ -29,7 +34,7 @@ func echo(args []Value) Value {
 }
 
 func set(args []Value) Value {
-	if len(args) != 2 {
+	if len(args) < 2 {
 		return Value{typ: "error", str: "Err wrong number of arguments for 'set' command"}
 	}
 
@@ -39,6 +44,25 @@ func set(args []Value) Value {
 	SETsMu.Lock()
 	SETs[key] = value
 	SETsMu.Unlock()
+
+	if len(args) > 2 {
+		expiryCommand := args[2]
+		if expiryCommand.bulk != "px" {
+			fmt.Println(expiryCommand)
+			return Value{typ: "error", str: "Err incorrect expiry command for 'set'"}
+		}
+		numberOfMiliseconds, err := strconv.Atoi(args[3].bulk)
+		if err != nil {
+			return Value{typ: "error", str: "Err incorrect expiry time for 'set'"}
+		}
+		// set expiration
+		go func() {
+			<-time.After(time.Duration(numberOfMiliseconds) * time.Millisecond)
+			SETsMu.Lock()
+			delete(SETs, key)
+			SETsMu.Unlock()
+		}()
+	}
 
 	return Value{typ: "string", str: "OK"}
 }
